@@ -106,7 +106,7 @@ fun CheckButton(
             .clip(CircleShape)
             .background(if (isChecked) color else Color.White)
             .border(2.dp, color, CircleShape)
-            .clickable { onClick() }
+            .clickable(enabled = !isChecked) { onClick() }
 
         Column(
             modifier = buttonModifier,

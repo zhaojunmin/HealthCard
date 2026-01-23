@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 class HealthRepository(private val healthDao: HealthDao) {
     suspend fun insertHealthRecord(type: String) {
+        if (isRecordedToday(type)) return
         val today = LocalDate.now().toString()
         val timestamp = System.currentTimeMillis()
         val record = HealthRecord(type = type, date = today, timestamp = timestamp)
