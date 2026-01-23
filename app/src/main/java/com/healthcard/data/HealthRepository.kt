@@ -20,4 +20,16 @@ class HealthRepository(private val healthDao: HealthDao) {
         val today = LocalDate.now().toString()
         return healthDao.getTodayRecordCount(today).toInt()
     }
+
+    suspend fun getAllRecords(): List<HealthRecord> {
+        return healthDao.getAllRecords()
+    }
+
+    suspend fun getRecordsByDate(date: String): List<HealthRecord> {
+        return healthDao.getRecordsByDate(date)
+    }
+
+    suspend fun getAllDates(): List<String> {
+        return healthDao.getAllDates()
+    }
 }

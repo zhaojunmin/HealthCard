@@ -14,4 +14,13 @@ interface HealthDao {
 
     @Query("SELECT COUNT(*) FROM health_records WHERE date = :date")
     suspend fun getTodayRecordCount(date: String): Long
+
+    @Query("SELECT * FROM health_records ORDER BY date DESC")
+    suspend fun getAllRecords(): List<HealthRecord>
+
+    @Query("SELECT * FROM health_records WHERE date = :date")
+    suspend fun getRecordsByDate(date: String): List<HealthRecord>
+
+    @Query("SELECT DISTINCT date FROM health_records ORDER BY date DESC")
+    suspend fun getAllDates(): List<String>
 }

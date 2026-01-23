@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,67 +26,87 @@ import androidx.compose.ui.unit.sp
 import com.healthcard.viewmodel.HealthViewModel
 
 @Composable
-fun MainScreen(viewModel: HealthViewModel) {
+fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(Color(0xFFF5F5F5))
     ) {
-        Text(
-            text = "健康打卡",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF2196F3),
-            modifier = Modifier.padding(bottom = 40.dp)
-        )
-
-        Text(
-            text = "今日已打卡: ${viewModel.todayCount.value}/4",
-            fontSize = 18.sp,
-            color = Color(0xFF666666),
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
-
+        // Header with history button
         Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.End
         ) {
-            CheckButton(
-                title = "健康运动",
-                isChecked = viewModel.isExerciseChecked.value,
-                onClick = { viewModel.checkExercise() },
-                color = Color(0xFF4CAF50)
-            )
-            Spacer(modifier = Modifier.width(30.dp))
-            CheckButton(
-                title = "健康饮食",
-                isChecked = viewModel.isDietChecked.value,
-                onClick = { viewModel.checkDiet() },
-                color = Color(0xFFFF9800)
+            Text(
+                text = "打卡历史",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2196F3),
+                modifier = Modifier.clickable { onHistoryClick() }
             )
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            CheckButton(
-                title = "健康睡觉",
-                isChecked = viewModel.isSleepChecked.value,
-                onClick = { viewModel.checkSleep() },
-                color = Color(0xFF9C27B0)
-            )
-            Spacer(modifier = Modifier.width(30.dp))
-            CheckButton(
-                title = "健康心态",
-                isChecked = viewModel.isMoodChecked.value,
-                onClick = { viewModel.checkMood() },
+            Text(
+                text = "健康打卡",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color(0xFF2196F3)
             )
+
+            Text(
+                text = "今日已打卡: ${viewModel.todayCount.value}/4",
+                fontSize = 18.sp,
+                color = Color(0xFF666666)
+            )
+
+            // 第一排两个按钮
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CheckButton(
+                    title = "健康运动",
+                    isChecked = viewModel.isExerciseChecked.value,
+                    onClick = { viewModel.checkExercise() },
+                    color = Color(0xFF4CAF50)
+                )
+                CheckButton(
+                    title = "健康饮食",
+                    isChecked = viewModel.isDietChecked.value,
+                    onClick = { viewModel.checkDiet() },
+                    color = Color(0xFFFF9800)
+                )
+            }
+
+            // 第二排两个按钮
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CheckButton(
+                    title = "健康睡觉",
+                    isChecked = viewModel.isSleepChecked.value,
+                    onClick = { viewModel.checkSleep() },
+                    color = Color(0xFF9C27B0)
+                )
+                CheckButton(
+                    title = "健康心态",
+                    isChecked = viewModel.isMoodChecked.value,
+                    onClick = { viewModel.checkMood() },
+                    color = Color(0xFF2196F3)
+                )
+            }
         }
     }
 }

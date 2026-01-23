@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.healthcard.data.HealthDatabase
+import com.healthcard.data.HealthRecord
 import com.healthcard.data.HealthRepository
 import kotlinx.coroutines.launch
 
@@ -16,6 +17,9 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     val isSleepChecked = mutableStateOf(false)
     val isMoodChecked = mutableStateOf(false)
     val todayCount = mutableStateOf(0)
+    val allRecords = mutableStateOf<List<HealthRecord>>(emptyList())
+    val groupedRecords = mutableStateOf<Map<String, List<HealthRecord>>>(emptyMap())
+    val isLoading = mutableStateOf(false)
 
     init {
         val healthDao = HealthDatabase.getDatabase(application).healthDao()
@@ -68,5 +72,26 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             repository.insertHealthRecord("mood")
             loadTodayStatus()
         }
+    }
+
+    fun loadHistory() {
+        viewModelScope.launch {
+            isLoading.value = true
+            try {
+                val records = repository.getAllRecords()
+                allRecords.value = records
+                groupedRecords.value = records.groupBy { it.date }
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun getRecordsByDate(date: String): List<HealthRecord> {
+        return groupedRecords.value[date] ?: emptyList()
+    }
+
+    fun getRecordTypesByDate(date: String): Set<String> {
+        return getRecordsByDate(date).map { it.type }.toSet()
     }
 }
