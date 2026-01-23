@@ -76,12 +76,14 @@ fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
             ) {
                 CheckButton(
                     title = "健康运动",
+                    description = "跑步五公里",
                     isChecked = viewModel.isExerciseChecked.value,
                     onClick = { viewModel.checkExercise() },
                     color = Color(0xFF4CAF50)
                 )
                 CheckButton(
                     title = "健康饮食",
+                    description = "少油少盐少脂",
                     isChecked = viewModel.isDietChecked.value,
                     onClick = { viewModel.checkDiet() },
                     color = Color(0xFFFF9800)
@@ -96,12 +98,14 @@ fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
             ) {
                 CheckButton(
                     title = "健康睡觉",
+                    description = "11点前睡觉",
                     isChecked = viewModel.isSleepChecked.value,
                     onClick = { viewModel.checkSleep() },
                     color = Color(0xFF9C27B0)
                 )
                 CheckButton(
                     title = "健康心态",
+                    description = "读书反思",
                     isChecked = viewModel.isMoodChecked.value,
                     onClick = { viewModel.checkMood() },
                     color = Color(0xFF2196F3)
@@ -114,6 +118,7 @@ fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
 @Composable
 fun CheckButton(
     title: String,
+    description: String,
     isChecked: Boolean,
     onClick: () -> Unit,
     color: Color
@@ -149,6 +154,14 @@ fun CheckButton(
             fontSize = 16.sp,
             color = Color(0xFF333333),
             fontWeight = FontWeight.Medium
+        )
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = description,
+            fontSize = 12.sp,
+            color = Color(0xFF666666)
         )
     }
 }
