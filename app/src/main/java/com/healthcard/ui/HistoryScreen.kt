@@ -42,6 +42,9 @@ fun HistoryScreen(viewModel: HealthViewModel, onBackClick: () -> Unit) {
             .background(Color(0xFFF5F5F5)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Add padding at the top to avoid status bar overlap
+        Spacer(modifier = Modifier.height(48.dp))
+        
         // Header
         Row(
             modifier = Modifier
