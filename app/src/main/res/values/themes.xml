@@ -3,7 +3,7 @@
     <style name="Theme.HealthCard" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:colorPrimary">@color/purple_500</item>
         <item name="android:colorSecondary">@color/teal_200</item>
-        <item name="android:statusBarColor">@color/purple_700</item>
+        <item name="android:statusBarColor">@color/blue_500</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">false</item>
