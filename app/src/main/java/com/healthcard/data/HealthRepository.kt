@@ -1,14 +1,20 @@
 package com.healthcard.data
 
 import java.time.LocalDate
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class HealthRepository(private val healthDao: HealthDao) {
+    private val insertMutex = Mutex()
+
     suspend fun insertHealthRecord(type: String) {
-        if (isRecordedToday(type)) return
-        val today = LocalDate.now().toString()
-        val timestamp = System.currentTimeMillis()
-        val record = HealthRecord(type = type, date = today, timestamp = timestamp)
-        healthDao.insertRecord(record)
+        insertMutex.withLock {
+            if (isRecordedToday(type)) return@withLock
+            val today = LocalDate.now().toString()
+            val timestamp = System.currentTimeMillis()
+            val record = HealthRecord(type = type, date = today, timestamp = timestamp)
+            healthDao.insertRecord(record)
+        }
     }
 
     suspend fun isRecordedToday(type: String): Boolean {
