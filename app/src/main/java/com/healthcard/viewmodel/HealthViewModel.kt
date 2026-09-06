@@ -17,7 +17,6 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
     val isSleepChecked = mutableStateOf(false)
     val isMoodChecked = mutableStateOf(false)
     val todayCount = mutableStateOf(0)
-    val allRecords = mutableStateOf<List<HealthRecord>>(emptyList())
     val groupedRecords = mutableStateOf<Map<String, List<HealthRecord>>>(emptyMap())
     val isLoading = mutableStateOf(false)
 
@@ -79,19 +78,10 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             isLoading.value = true
             try {
                 val records = repository.getAllRecords()
-                allRecords.value = records
                 groupedRecords.value = records.groupBy { it.date }
             } finally {
                 isLoading.value = false
             }
         }
-    }
-
-    fun getRecordsByDate(date: String): List<HealthRecord> {
-        return groupedRecords.value[date] ?: emptyList()
-    }
-
-    fun getRecordTypesByDate(date: String): Set<String> {
-        return getRecordsByDate(date).map { it.type }.toSet()
     }
 }
