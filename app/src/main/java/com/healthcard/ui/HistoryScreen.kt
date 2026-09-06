@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,14 +43,12 @@ fun HistoryScreen(viewModel: HealthViewModel, onBackClick: () -> Unit) {
             .background(Color(0xFFF5F5F5)),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Add padding at the top to avoid status bar overlap
-        Spacer(modifier = Modifier.height(48.dp))
-        
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF2196F3))
+                .statusBarsPadding()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
