@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
 }
+
+// 从 local.properties 读取高德地图 Key（不纳入版本库）
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val amapAndroidKey: String = localProps.getProperty("AMAP_ANDROID_KEY", "")
+val amapWebKey: String = localProps.getProperty("AMAP_WEB_KEY", "")
 
 android {
     namespace = "com.healthcard"
@@ -15,6 +25,10 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        // 高德地图 SDK Key 注入 AndroidManifest；Web 服务 Key 注入 BuildConfig
+        manifestPlaceholders["AMAP_KEY"] = amapAndroidKey
+        buildConfigField("String", "AMAP_WEB_KEY", "\"$amapWebKey\"")
     }
 
     buildTypes {
@@ -32,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -51,6 +66,9 @@ dependencies {
     // ModelProvider: networking + JSON for LLM connectivity (DeepSeek, OpenAI-compatible)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
+
+    // 高德地图 3D SDK（地图展示）；路径规划走高德 Web 服务 API(HTTP)
+    implementation(libs.amap.map)
 
     // Room dependencies
     implementation(libs.androidx.room.runtime)

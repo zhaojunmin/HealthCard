@@ -3,13 +3,19 @@ package com.healthcard.location
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Looper
 import androidx.annotation.RequiresPermission
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Locale
 import kotlin.coroutines.resume
 
 /** 简单经纬度坐标。 */
@@ -24,8 +30,9 @@ data class GeoPoint(
  */
 class LocationProvider(context: Context) {
 
+    private val appContext = context.applicationContext
     private val locationManager =
-        context.applicationContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
     /**
      * 获取当前坐标：优先请求一次实时更新，超时则回退到最近已知位置。
@@ -36,6 +43,52 @@ class LocationProvider(context: Context) {
         val fresh = withTimeoutOrNull(timeoutMillis) { requestSingleUpdate() }
         if (fresh != null) return fresh
         return lastKnownLocation()
+    }
+
+    /**
+     * 逆地理编码：把经纬度转成可读的地点描述（如「北京市海淀区中关村大街」）。
+     * 使用系统 [Geocoder]，无需额外依赖或密钥；不可用或失败时返回 null。
+     */
+    suspend fun reverseGeocode(point: GeoPoint): String? {
+        if (!Geocoder.isPresent()) return null
+        val geocoder = Geocoder(appContext, Locale.getDefault())
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            suspendCancellableCoroutine { cont ->
+                geocoder.getFromLocation(point.latitude, point.longitude, 1,
+                    object : Geocoder.GeocodeListener {
+                        override fun onGeocode(addresses: MutableList<Address>) {
+                            if (cont.isActive) cont.resume(addresses.firstOrNull()?.toReadable())
+                        }
+
+                        override fun onError(errorMessage: String?) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    })
+            }
+        } else {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    @Suppress("DEPRECATION")
+                    geocoder.getFromLocation(point.latitude, point.longitude, 1)
+                        ?.firstOrNull()
+                        ?.toReadable()
+                }.getOrNull()
+            }
+        }
+    }
+
+    /** 把 [Address] 组装成一行可读地址。 */
+    private fun Address.toReadable(): String? {
+        getAddressLine(0)?.takeIf { it.isNotBlank() }?.let { return it }
+        val parts = listOfNotNull(
+            adminArea,        // 省/直辖市
+            locality,         // 市
+            subLocality,      // 区
+            thoroughfare,     // 街道
+            featureName,      // 门牌/地点名
+        ).distinct()
+        return parts.joinToString("").ifBlank { null }
     }
 
     @SuppressLint("MissingPermission")

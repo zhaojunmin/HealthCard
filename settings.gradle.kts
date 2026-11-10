@@ -10,6 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 高德地图 SDK 托管仓库
+        maven("https://maven.aliyun.com/repository/public")
     }
 }
 rootProject.name = "HealthCard"

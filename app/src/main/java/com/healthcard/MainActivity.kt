@@ -19,9 +19,11 @@ import com.healthcard.service.KeepAliveService
 import com.healthcard.ui.ConfigScreen
 import com.healthcard.ui.HistoryScreen
 import com.healthcard.ui.MainScreen
+import com.healthcard.ui.MapRouteScreen
 import com.healthcard.ui.RouteScreen
 import com.healthcard.viewmodel.ConfigViewModel
 import com.healthcard.viewmodel.HealthViewModel
+import com.healthcard.viewmodel.MapRouteViewModel
 import com.healthcard.viewmodel.RouteViewModel
 
 class MainActivity : ComponentActivity() {
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
                     val viewModel: HealthViewModel = viewModel(factory = HealthViewModel.Factory(application))
                     val routeViewModel: RouteViewModel = viewModel(factory = RouteViewModel.Factory(application))
                     val configViewModel: ConfigViewModel = viewModel(factory = ConfigViewModel.Factory(application))
+                    val mapRouteViewModel: MapRouteViewModel = viewModel(factory = MapRouteViewModel.Factory(application))
                     var currentScreen by remember { mutableStateOf("main") }
 
                     when (currentScreen) {
@@ -63,11 +66,25 @@ class MainActivity : ComponentActivity() {
                                 viewModel = routeViewModel,
                                 onBack = { currentScreen = "main" },
                                 onConfigClick = { currentScreen = "config" },
+                                onShowRouteOnMap = { dLat, dLon, name ->
+                                    mapRouteViewModel.plan(
+                                        originWgs = routeViewModel.location.value,
+                                        destLat = dLat,
+                                        destLon = dLon,
+                                        name = name,
+                                    )
+                                    currentScreen = "map"
+                                },
                             )
                         }
                         "config" -> {
                             ConfigScreen(configViewModel) {
                                 currentScreen = "main"
+                            }
+                        }
+                        "map" -> {
+                            MapRouteScreen(mapRouteViewModel) {
+                                currentScreen = "route"
                             }
                         }
                     }
