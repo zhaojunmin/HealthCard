@@ -66,14 +66,17 @@ class MainActivity : ComponentActivity() {
                                 viewModel = routeViewModel,
                                 onBack = { currentScreen = "main" },
                                 onConfigClick = { currentScreen = "config" },
-                                onShowRouteOnMap = { dLat, dLon, name ->
-                                    mapRouteViewModel.plan(
-                                        originWgs = routeViewModel.location.value,
-                                        destLat = dLat,
-                                        destLon = dLon,
-                                        name = name,
-                                    )
-                                    currentScreen = "map"
+                                onShowRouteOnMap = { index ->
+                                    routeViewModel.routes.value.getOrNull(index)?.let { r ->
+                                        mapRouteViewModel.planRoute(
+                                            originWgs = routeViewModel.location.value,
+                                            waypointsGcj = r.waypoints.map {
+                                                com.healthcard.amap.RoutePoint(it.lat, it.lon)
+                                            },
+                                            name = r.name,
+                                        )
+                                        currentScreen = "map"
+                                    }
                                 },
                             )
                         }

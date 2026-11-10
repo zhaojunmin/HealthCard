@@ -61,20 +61,19 @@ fun MapRouteScreen(viewModel: MapRouteViewModel, onBack: () -> Unit) {
         }
     }
 
-    // 路线/起终点变化时在地图上绘制
+    // 路线/起点/途经点变化时在地图上绘制
     val route = viewModel.route.value
-    LaunchedEffect(route, viewModel.origin.value, viewModel.destination.value) {
+    LaunchedEffect(route, viewModel.origin.value, viewModel.waypoints.value) {
         val aMap = mapView.map ?: return@LaunchedEffect
         aMap.clear()
         val origin = viewModel.origin.value
-        val dest = viewModel.destination.value
+        val wps = viewModel.waypoints.value
         origin?.let {
-            aMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lon)).title("起点"))
+            aMap.addMarker(MarkerOptions().position(LatLng(it.lat, it.lon)).title("起点/终点"))
         }
-        dest?.let {
+        wps.forEachIndexed { i, wp ->
             aMap.addMarker(
-                MarkerOptions().position(LatLng(it.lat, it.lon))
-                    .title(viewModel.destName.value.ifBlank { "终点" })
+                MarkerOptions().position(LatLng(wp.lat, wp.lon)).title("途经点 ${i + 1}")
             )
         }
         if (route != null && route.points.isNotEmpty()) {
@@ -85,8 +84,8 @@ fun MapRouteScreen(viewModel: MapRouteViewModel, onBack: () -> Unit) {
             val builder = LatLngBounds.Builder()
             pts.forEach { builder.include(it) }
             aMap.moveCamera(CameraUpdateFactory.newLatLngBounds(builder.build(), 120))
-        } else if (dest != null) {
-            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(dest.lat, dest.lon), 15f))
+        } else if (origin != null) {
+            aMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(origin.lat, origin.lon), 15f))
         }
     }
 
@@ -111,7 +110,7 @@ fun MapRouteScreen(viewModel: MapRouteViewModel, onBack: () -> Unit) {
                 modifier = Modifier.clickable { onBack() }
             )
             Text(
-                text = viewModel.destName.value.ifBlank { "路线地图" },
+                text = viewModel.routeName.value.ifBlank { "路线地图" },
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF333333),

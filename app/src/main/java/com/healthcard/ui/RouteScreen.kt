@@ -40,7 +40,7 @@ fun RouteScreen(
     viewModel: RouteViewModel,
     onBack: () -> Unit,
     onConfigClick: () -> Unit,
-    onShowRouteOnMap: (dLat: Double, dLon: Double, name: String) -> Unit,
+    onShowRouteOnMap: (index: Int) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -99,6 +99,39 @@ fun RouteScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
+            // 目标距离
+            Text("目标距离", fontSize = 13.sp, color = Color(0xFF666666),
+                modifier = Modifier.padding(vertical = 6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(3, 5, 10).forEach { km ->
+                    SelectChip(
+                        label = "${km}km",
+                        selected = viewModel.targetDistanceKm.value == km,
+                        onClick = { viewModel.targetDistanceKm.value = km },
+                    )
+                }
+            }
+
+            // 场景偏好
+            Text("场景偏好", fontSize = 13.sp, color = Color(0xFF666666),
+                modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(
+                    RouteViewModel.PREF_ANY,
+                    RouteViewModel.PREF_PARK,
+                    RouteViewModel.PREF_RIVER,
+                    RouteViewModel.PREF_GREENWAY,
+                ).forEach { pref ->
+                    SelectChip(
+                        label = pref,
+                        selected = viewModel.preference.value == pref,
+                        onClick = { viewModel.preference.value = pref },
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
             Button(
                 onClick = {
                     permissionLauncher.launch(
@@ -193,24 +226,33 @@ fun RouteScreen(
     }
 }
 
-/**
- * 处理 A2UI 按钮动作。支持 "amap:<纬度>,<经度>,<名称>" →
- * 打开应用内高德地图界面展示完整步行路线。
- */
+/** 处理 A2UI 按钮动作。支持 "route:<index>" → 打开应用内地图展示该条完整路线。 */
 private fun handleRouteAction(
     action: String,
     context: Context,
-    onShowRouteOnMap: (dLat: Double, dLon: Double, name: String) -> Unit,
+    onShowRouteOnMap: (index: Int) -> Unit,
 ) {
-    if (action.startsWith("amap:")) {
-        val parts = action.removePrefix("amap:").split(",", limit = 3)
-        val lat = parts.getOrNull(0)?.trim()?.toDoubleOrNull()
-        val lon = parts.getOrNull(1)?.trim()?.toDoubleOrNull()
-        val name = parts.getOrNull(2)?.trim().orEmpty().ifBlank { "终点" }
-        if (lat != null && lon != null) {
-            onShowRouteOnMap(lat, lon, name)
+    if (action.startsWith("route:")) {
+        val index = action.removePrefix("route:").trim().toIntOrNull()
+        if (index != null) {
+            onShowRouteOnMap(index)
         } else {
-            Toast.makeText(context, "该路线缺少有效坐标", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "无效的路线", Toast.LENGTH_SHORT).show()
         }
     }
+}
+
+@Composable
+private fun SelectChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        text = label,
+        fontSize = 14.sp,
+        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+        color = if (selected) Color.White else Color(0xFF444444),
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (selected) Color(0xFF4CAF50) else Color(0xFFE0E0E0))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    )
 }
