@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">健康打卡</string>
+    <string name="service_channel_name">保活服务</string>
+    <string name="service_notification_title">健康打卡运行中</string>
+    <string name="service_notification_text">正在后台保持健康提醒服务</string>
 </resources>

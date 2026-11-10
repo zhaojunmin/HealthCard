@@ -4,3 +4,5 @@
 /.kotlin
 /.idea
 /.trae
+/local.properties
+/.build_*.log

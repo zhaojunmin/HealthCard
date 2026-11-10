@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -46,6 +47,10 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
+    // ModelProvider: networking + JSON for LLM connectivity (DeepSeek, OpenAI-compatible)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
 
     // Room dependencies
     implementation(libs.androidx.room.runtime)

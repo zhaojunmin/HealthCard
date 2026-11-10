@@ -27,7 +27,12 @@ import androidx.compose.ui.unit.sp
 import com.healthcard.viewmodel.HealthViewModel
 
 @Composable
-fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
+fun MainScreen(
+    viewModel: HealthViewModel,
+    onHistoryClick: () -> Unit,
+    onRouteClick: () -> Unit,
+    onConfigClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,14 +44,28 @@ fun MainScreen(viewModel: HealthViewModel, onHistoryClick: () -> Unit) {
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.End)
         ) {
+            Text(
+                text = "跑步路线",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50),
+                modifier = Modifier.clickable { onRouteClick() }
+            )
             Text(
                 text = "打卡历史",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF2196F3),
                 modifier = Modifier.clickable { onHistoryClick() }
+            )
+            Text(
+                text = "设置",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF757575),
+                modifier = Modifier.clickable { onConfigClick() }
             )
         }
 
