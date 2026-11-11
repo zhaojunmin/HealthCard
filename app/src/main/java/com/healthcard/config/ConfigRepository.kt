@@ -30,9 +30,17 @@ class ConfigRepository(context: Context) {
     val isConfigured: Boolean
         get() = deepSeekApiKey.isNotBlank()
 
+    /** 是否开启每日打卡提醒（固定 21:00）。 */
+    var reminderEnabled: Boolean
+        get() = prefs.getBoolean(KEY_REMINDER, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_REMINDER, value).apply()
+        }
+
     private companion object {
         const val PREFS_NAME = "model_config"
         const val KEY_API = "deepseek_api_key"
         const val KEY_MODEL = "deepseek_model"
+        const val KEY_REMINDER = "reminder_enabled"
     }
 }

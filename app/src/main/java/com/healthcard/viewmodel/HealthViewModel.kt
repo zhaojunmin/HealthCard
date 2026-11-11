@@ -11,6 +11,8 @@ import com.healthcard.data.HealthRepository
 import com.healthcard.model.ChatMessage
 import com.healthcard.model.ModelException
 import com.healthcard.model.ModelProviderFactory
+import com.healthcard.widget.HealthStatusStore
+import com.healthcard.widget.HealthWidgetProvider
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -60,6 +62,17 @@ class HealthViewModel(application: Application) : AndroidViewModel(application) 
             isSleepChecked.value = repository.isRecordedToday("sleep")
             isMoodChecked.value = repository.isRecordedToday("mood")
             todayCount.value = repository.getTodayRecordCount()
+
+            // 写入今日快照并刷新桌面小组件
+            val app = getApplication<Application>()
+            HealthStatusStore.save(
+                app,
+                exercise = isExerciseChecked.value,
+                diet = isDietChecked.value,
+                sleep = isSleepChecked.value,
+                mood = isMoodChecked.value,
+            )
+            HealthWidgetProvider.refresh(app)
         }
     }
 

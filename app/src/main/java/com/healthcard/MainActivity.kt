@@ -15,7 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.healthcard.config.ConfigRepository
 import com.healthcard.service.KeepAliveService
+import com.healthcard.service.ReminderScheduler
 import com.healthcard.ui.ConfigScreen
 import com.healthcard.ui.HistoryScreen
 import com.healthcard.ui.MainScreen
@@ -38,6 +40,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ensureKeepAliveRunning()
+        // 若已开启每日提醒，确保闹钟已登记（覆盖安装/杀进程后仍生效）
+        if (ConfigRepository(this).reminderEnabled) {
+            ReminderScheduler.schedule(this)
+        }
         setContent {
             MaterialTheme {
                 Surface {
