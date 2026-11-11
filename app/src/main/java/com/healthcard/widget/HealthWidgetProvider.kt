@@ -22,7 +22,7 @@ class HealthWidgetProvider : AppWidgetProvider() {
 
     companion object {
         private const val DONE_COLOR = 0xFF10B981.toInt()   // 翡翠绿
-        private const val MISS_COLOR = 0xFF9AA0A6.toInt()   // 灰
+        private const val MISS_COLOR = 0xFFCFD6D1.toInt()   // 浅灰（未完成圆点）
 
         /** 主动刷新所有已添加的小组件。 */
         fun refresh(context: Context) {
@@ -38,10 +38,11 @@ class HealthWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_health)
 
             views.setTextViewText(R.id.widget_count, "${s.count}/4")
-            setHabit(views, R.id.widget_exercise, "运动", s.exercise)
-            setHabit(views, R.id.widget_diet, "饮食", s.diet)
-            setHabit(views, R.id.widget_sleep, "睡觉", s.sleep)
-            setHabit(views, R.id.widget_mood, "心态", s.mood)
+            views.setProgressBar(R.id.widget_progress, 4, s.count, false)
+            setDot(views, R.id.dot_exercise, s.exercise)
+            setDot(views, R.id.dot_diet, s.diet)
+            setDot(views, R.id.dot_sleep, s.sleep)
+            setDot(views, R.id.dot_mood, s.mood)
 
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -55,9 +56,8 @@ class HealthWidgetProvider : AppWidgetProvider() {
             manager.updateAppWidget(id, views)
         }
 
-        private fun setHabit(views: RemoteViews, viewId: Int, name: String, done: Boolean) {
-            views.setTextViewText(viewId, if (done) "✓ $name" else "○ $name")
-            views.setTextColor(viewId, if (done) DONE_COLOR else MISS_COLOR)
+        private fun setDot(views: RemoteViews, viewId: Int, done: Boolean) {
+            views.setInt(viewId, "setColorFilter", if (done) DONE_COLOR else MISS_COLOR)
         }
     }
 }
