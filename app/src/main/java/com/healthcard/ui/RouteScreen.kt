@@ -6,8 +6,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,23 +17,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.healthcard.a2ui.A2uiSurface
 import com.healthcard.viewmodel.RouteViewModel
 
@@ -41,7 +51,8 @@ fun RouteScreen(
     onBack: () -> Unit,
     onConfigClick: () -> Unit,
     onShowRouteOnMap: (index: Int) -> Unit,
-) {
+) = HealthTheme {
+    val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
 
     // 定位权限申请：授予后发起路线规划（Key 从「模型配置」读取）
@@ -60,52 +71,40 @@ fun RouteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(colors.background)
+            .statusBarsPadding(),
     ) {
-        // 顶部栏
+        // ---- 顶部栏 ----
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            CircleIconButton(Icons.AutoMirrored.Rounded.ArrowBack, "返回", onBack)
+            Spacer(modifier = Modifier.width(14.dp))
             Text(
-                text = "← 返回",
-                fontSize = 18.sp,
+                text = "跑步路线",
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF2196F3),
-                modifier = Modifier.clickable { onBack() }
+                color = colors.onBackground,
             )
-            Text(
-                text = "跑步路线规划",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333333),
-            )
-            Text(
-                text = "配置",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2196F3),
-                modifier = Modifier.clickable { onConfigClick() }
-            )
+            Spacer(modifier = Modifier.weight(1f))
+            CircleIconButton(Icons.Outlined.Settings, "配置", onConfigClick)
         }
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
         ) {
             // 目标距离
-            Text("目标距离", fontSize = 13.sp, color = Color(0xFF666666),
-                modifier = Modifier.padding(vertical = 6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SectionLabel("目标距离")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf(3, 5, 10).forEach { km ->
                     SelectChip(
-                        label = "${km}km",
+                        label = "$km 公里",
                         selected = viewModel.targetDistanceKm.value == km,
                         onClick = { viewModel.targetDistanceKm.value = km },
                     )
@@ -113,9 +112,9 @@ fun RouteScreen(
             }
 
             // 场景偏好
-            Text("场景偏好", fontSize = 13.sp, color = Color(0xFF666666),
-                modifier = Modifier.padding(top = 10.dp, bottom = 6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Spacer(modifier = Modifier.height(18.dp))
+            SectionLabel("场景偏好")
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf(
                     RouteViewModel.PREF_ANY,
                     RouteViewModel.PREF_PARK,
@@ -130,7 +129,7 @@ fun RouteScreen(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(22.dp))
 
             Button(
                 onClick = {
@@ -142,46 +141,73 @@ fun RouteScreen(
                     )
                 },
                 enabled = !viewModel.isLoading.value,
-                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.primary,
+                    contentColor = colors.onPrimary,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
             ) {
-                Text("获取周边跑步路线")
+                Icon(
+                    imageVector = Icons.Filled.DirectionsRun,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "获取周边跑步路线",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
             }
 
             // 定位到的位置信息
             val place = viewModel.placeName.value
             val loc = viewModel.location.value
             if (place != null || loc != null) {
-                Spacer(Modifier.height(12.dp))
-                Column(
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFE8F5E9))
-                        .padding(12.dp),
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.primaryContainer)
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    Text(
-                        text = "📍 当前位置",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32),
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null,
+                        tint = colors.onPrimaryContainer,
+                        modifier = Modifier.size(22.dp),
                     )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = place ?: "未能解析地点名称",
-                        fontSize = 15.sp,
-                        color = Color(0xFF333333),
-                    )
-                    if (loc != null) {
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
                         Text(
-                            text = "经纬度：%.5f, %.5f".format(loc.latitude, loc.longitude),
-                            fontSize = 12.sp,
-                            color = Color(0xFF888888),
+                            text = "当前位置",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.onPrimaryContainer.copy(alpha = 0.8f),
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = place ?: "未能解析地点名称",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = colors.onPrimaryContainer,
+                        )
+                        if (loc != null) {
+                            Text(
+                                text = "经纬度 %.5f, %.5f".format(loc.latitude, loc.longitude),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.onPrimaryContainer.copy(alpha = 0.7f),
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             when {
                 viewModel.isLoading.value -> {
@@ -190,18 +216,26 @@ fun RouteScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        CircularProgressIndicator()
-                        Spacer(Modifier.width(12.dp))
-                        Text("正在规划路线…", color = Color(0xFF666666))
+                        CircularProgressIndicator(color = colors.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("正在规划路线…", color = colors.onSurfaceVariant)
                     }
                 }
 
                 viewModel.errorMessage.value != null -> {
-                    Text(
-                        text = viewModel.errorMessage.value ?: "",
-                        color = Color(0xFFD32F2F),
-                        modifier = Modifier.padding(vertical = 8.dp),
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(colors.error.copy(alpha = 0.1f))
+                            .padding(14.dp),
+                    ) {
+                        Text(
+                            text = viewModel.errorMessage.value ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.error,
+                        )
+                    }
                 }
 
                 viewModel.surface.value != null -> {
@@ -213,16 +247,72 @@ fun RouteScreen(
                 }
 
                 else -> {
-                    Text(
-                        text = "点击上方按钮获取 AI 规划的周边跑步路线（请先在右上角「配置」中设置 API Key）。",
-                        color = Color(0xFF999999),
-                        modifier = Modifier.padding(vertical = 8.dp),
-                    )
+                    EmptyHint()
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.padding(bottom = 10.dp),
+    )
+}
+
+@Composable
+private fun CircleIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Box(
+        modifier = Modifier
+            .size(42.dp)
+            .clip(CircleShape)
+            .background(colors.surfaceVariant)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+@Composable
+private fun EmptyHint() {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surfaceVariant)
+            .padding(18.dp),
+    ) {
+        Text(
+            text = "获取 AI 规划的周边跑步路线",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.onSurface,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "选择目标距离与场景偏好后点击上方按钮。首次使用请先在右上角「配置」中设置 API Key。",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.onSurfaceVariant,
+        )
     }
 }
 
@@ -244,15 +334,18 @@ private fun handleRouteAction(
 
 @Composable
 private fun SelectChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val shape = CircleShape
     Text(
         text = label,
-        fontSize = 14.sp,
-        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-        color = if (selected) Color.White else Color(0xFF444444),
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        color = if (selected) colors.onPrimary else colors.onSurfaceVariant,
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) Color(0xFF4CAF50) else Color(0xFFE0E0E0))
+            .clip(shape)
+            .background(if (selected) colors.primary else colors.surfaceVariant)
+            .then(if (selected) Modifier else Modifier.border(1.dp, colors.outline, shape))
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 18.dp, vertical = 10.dp),
     )
 }
