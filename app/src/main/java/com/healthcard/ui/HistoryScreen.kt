@@ -3,12 +3,14 @@ package com.healthcard.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,20 +20,28 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.EventNote
 import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.SelfImprovement
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,10 +51,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.healthcard.data.HealthRecord
+import com.healthcard.viewmodel.HealthViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -63,7 +75,7 @@ private val HABIT_SPECS = listOf(
 )
 
 @Composable
-fun HistoryScreen(viewModel: com.healthcard.viewmodel.HealthViewModel, onBackClick: () -> Unit) = HealthTheme {
+fun HistoryScreen(viewModel: HealthViewModel, onBackClick: () -> Unit) = HealthTheme {
     val colors = MaterialTheme.colorScheme
     LaunchedEffect(Unit) { viewModel.loadHistory() }
 
@@ -114,15 +126,25 @@ fun HistoryScreen(viewModel: com.healthcard.viewmodel.HealthViewModel, onBackCli
                 val streak = computeStreak(dateSet)
                 val perfectDays = grouped.count { it.value.map { r -> r.type }.toSet().size >= 4 }
                 val total = grouped.values.sumOf { it.size }
+                val countByDate = grouped.mapValues { e -> e.value.map { r -> r.type }.toSet().size }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    item { SummaryCard(streak = streak, perfectDays = perfectDays, total = total) }
+                    item { AchievementsRow(streak = streak, perfectDays = perfectDays, total = total) }
+                    item { HeatmapCard(countByDate = countByDate) }
+                    item { AiReportCard(viewModel = viewModel) }
                     item {
-                        SummaryCard(streak = streak, perfectDays = perfectDays, total = total)
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "每日记录",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.onBackground,
+                            modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                        )
                     }
                     items(days) { (date, records) ->
                         DayCard(date = date, records = records)
@@ -198,6 +220,274 @@ private fun StatDivider() {
     )
 }
 
+private data class Badge(val label: String, val icon: ImageVector, val earned: Boolean)
+
+@Composable
+private fun AchievementsRow(streak: Int, perfectDays: Int, total: Int) {
+    val colors = MaterialTheme.colorScheme
+    val badges = listOf(
+        Badge("连续 7 天", Icons.Filled.LocalFireDepartment, streak >= 7),
+        Badge("连续 30 天", Icons.Filled.MilitaryTech, streak >= 30),
+        Badge("全勤 7 天", Icons.Filled.WorkspacePremium, perfectDays >= 7),
+        Badge("打卡 50 次", Icons.Filled.EmojiEvents, total >= 50),
+        Badge("打卡 100 次", Icons.Filled.EmojiEvents, total >= 100),
+    )
+    Column {
+        Text(
+            text = "成就",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = colors.onBackground,
+            modifier = Modifier.padding(bottom = 10.dp),
+        )
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            badges.forEach { badge ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.width(72.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(if (badge.earned) colors.primary else colors.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = badge.icon,
+                            contentDescription = badge.label,
+                            tint = if (badge.earned) colors.onPrimary else colors.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(26.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = badge.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (badge.earned) FontWeight.Bold else FontWeight.Normal,
+                        color = if (badge.earned) colors.onSurface else colors.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeatmapCard(countByDate: Map<String, Int>) {
+    val colors = MaterialTheme.colorScheme
+    val today = LocalDate.now()
+    // 对齐到 4 周前的周一，共 5 周
+    val startMonday = today.minusWeeks(4).let { it.minusDays((it.dayOfWeek.value - 1).toLong()) }
+    val weekdayLabels = listOf("一", "二", "三", "四", "五", "六", "日")
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(1.dp, colors.outline, RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "打卡热力图",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.onSurface,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "最近 5 周",
+                style = MaterialTheme.typography.labelMedium,
+                color = colors.onSurfaceVariant,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        // 星期表头
+        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            weekdayLabels.forEach { wd ->
+                Text(
+                    text = wd,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        // 5 周网格
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            for (week in 0 until 5) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    for (dow in 0 until 7) {
+                        val date = startMonday.plusDays((week * 7 + dow).toLong())
+                        val future = date.isAfter(today)
+                        val count = countByDate[date.toString()] ?: 0
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(heatColor(count, future, colors)),
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        // 图例
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("少", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+            Spacer(modifier = Modifier.width(6.dp))
+            listOf(0, 1, 2, 3, 4).forEach { c ->
+                Box(
+                    modifier = Modifier
+                        .size(14.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(heatColor(c, false, colors)),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+            Spacer(modifier = Modifier.width(2.dp))
+            Text("多", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+        }
+    }
+}
+
+private fun heatColor(count: Int, future: Boolean, colors: androidx.compose.material3.ColorScheme): Color {
+    if (future) return colors.surfaceVariant.copy(alpha = 0.35f)
+    return when {
+        count <= 0 -> colors.surfaceVariant
+        count == 1 -> colors.primary.copy(alpha = 0.3f)
+        count == 2 -> colors.primary.copy(alpha = 0.52f)
+        count == 3 -> colors.primary.copy(alpha = 0.74f)
+        else -> colors.primary
+    }
+}
+
+@Composable
+private fun AiReportCard(viewModel: HealthViewModel) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(colors.surface)
+            .border(1.dp, colors.outline, RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Outlined.AutoAwesome,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "AI 周报",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colors.onSurface,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        when {
+            viewModel.reportLoading.value -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        color = colors.primary,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("正在根据最近 7 天数据生成…", color = colors.onSurfaceVariant)
+                }
+            }
+
+            viewModel.reportText.value != null -> {
+                Text(
+                    text = viewModel.reportText.value ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurface,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable { viewModel.generateWeeklyReport() }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Refresh,
+                        contentDescription = null,
+                        tint = colors.primary,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "重新生成",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.primary,
+                    )
+                }
+            }
+
+            viewModel.reportError.value != null -> {
+                Text(
+                    text = viewModel.reportError.value ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.error,
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                GenerateButton(onClick = { viewModel.generateWeeklyReport() }, text = "重试")
+            }
+
+            else -> {
+                Text(
+                    text = "根据你最近 7 天的打卡数据，生成一段个性化的健康周报与建议。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                GenerateButton(onClick = { viewModel.generateWeeklyReport() }, text = "生成周报")
+            }
+        }
+    }
+}
+
+@Composable
+private fun GenerateButton(onClick: () -> Unit, text: String) {
+    val colors = MaterialTheme.colorScheme
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colors.primary,
+            contentColor = colors.onPrimary,
+        ),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.AutoAwesome,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text, fontWeight = FontWeight.Bold)
+    }
+}
+
 @Composable
 private fun DayCard(date: String, records: List<HealthRecord>) {
     val colors = MaterialTheme.colorScheme
@@ -242,7 +532,6 @@ private fun DayCard(date: String, records: List<HealthRecord>) {
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            // 完成度 pill
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
@@ -362,7 +651,7 @@ private fun computeStreak(dates: Set<String>): Int {
     return streak
 }
 
-/** ISO 日期 → ("11月11日·周二", "今天"/"昨天"/null)。解析失败则回退原串。 */
+/** ISO 日期 → ("11月11日 · 周二", "今天"/"昨天"/null)。解析失败则回退原串。 */
 private fun formatDate(iso: String): Pair<String, String?> {
     return try {
         val date = LocalDate.parse(iso)
